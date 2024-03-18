@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Test</title>
+    <style type="text/css">
+        canvas {
+            border: 1px solid black;
+            display: block;
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            background-color: rgb(0, 0, 0);
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrollbars */
+            background-color: greenyellow;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script>
+        window.onload = function() {
+            var canvas = document.getElementById('myCanvas');
+            var ctx = canvas.getContext('2d');
+            var circles = [];
+            var rect = canvas.getBoundingClientRect(); // Get canvas position on the page
+            var mouse = { x: -100, y: -100 }; // Initial mouse position
+
+            // Function to calculate distance between two points
+            function distance(x1, y1, x2, y2) {
+                return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            }
+
+            // Circle object constructor
+            function Circle(x, y, dx, dy, radius) {
+                this.x = x;
+                this.y = y;
+                this.dx = dx;
+                this.dy = dy;
+                this.radius = radius;
+                this.color = getRandomColor(); // Get a random color for each circle
+
+                this.draw = function() {
+                    ctx.fillStyle = this.color; // Set the fill style to the circle's color
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                };
+
+                this.update = function() {
+                    if ((this.x + this.radius) > canvas.width || (this.x - this.radius) < 0) {
+                        this.dx = -this.dx;
+                    }
+                
+                    if ((this.y + this.radius) > canvas.height || (this.y - this.radius) < 0) {
+                        this.dy = -this.dy;
+                    }
+
+                    // Calculate distance between circle and mouse pointer
+                    var dist = distance(this.x, this.y, mouse.x, mouse.y);
+
+                    // Increase radius if mouse is close
+                    if (dist < 100 && this.radius < 20) {
+                        this.radius += 2; // Adjust the increment for quicker response
+                    } else if (dist > 100 && this.radius > 2) {
+                        // Decrease radius if mouse is not close and radius is greater than the initial value
+                        this.radius -= 2; // Adjust the decrement for quicker response
+                    }
+
+                    this.x += this.dx;
+                    this.y += this.dy;
+                
+                    this.draw();
+                };
+            }
+
+            // Create circles
+            for (var i = 0; i < 100; i++) {
+                var radius = 2;
+                var x = Math.random() * (canvas.width - radius * 2) + radius;
+                var y = Math.random() * (canvas.height - radius * 2) + radius;
+                var dx = (Math.random() - 0.5) * 7;
+                var dy = (Math.random() - 0.5) * 7;
+                circles.push(new Circle(x, y, dx, dy, radius));
+            }
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (var i = 0; i < circles.length; i++) {
+                    circles[i].update();
+                }
+            }
+
+            // Start animation
+            animate();
+
+            // Mouse move event listener
+            canvas.addEventListener('mousemove', function(event) {
+                mouse.x = event.clientX - rect.left; // Adjust mouse x-coordinate
+                mouse.y = event.clientY - rect.top; // Adjust mouse y-coordinate
+            });
+        };
+
+        // Function to generate a random color
+        function getRandomColor() {
+            var r = Math.floor(Math.random() * 256);
+            var g = Math.floor(Math.random() * 256);
+            var b = Math.floor(Math.random() * 256);
+            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        }
+    </script>
+</body>
+</html>
